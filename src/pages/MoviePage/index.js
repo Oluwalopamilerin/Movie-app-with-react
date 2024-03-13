@@ -1,27 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { MovieCard } from "../../components";
 
 import SearchIcon from "../../assets/search.svg";
 
 import "./MoviePage.css";
 
-const APIKey = "396096eb";
-
-const APIURL = `https://www.omdbapi.com?apikey=${APIKey}`;
+const APIURL = process.env.REACT_APP_MOVIE_API;
 
 const MoviePage = () => {
   const [movies, setMovies] = useState([]);
   const [searchValue, setSearchValue] = useState("");
 
-  const searchMovies = async (title) => {
-    const response = await fetch(`${APIURL}&s=${title}`);
+  const searchMovies = useCallback(async (title) => {
+    let initialSearch = "Spiderman";
+    const search = title || initialSearch;
+
+    const response = await fetch(`${APIURL}&s=${search}`);
     const data = await response.json();
     setMovies(data.Search);
-  };
+  }, []);
 
   useEffect(() => {
-    searchMovies("Spiderman");
-  }, []);
+    searchMovies();
+  }, [searchMovies]);
+
+  const handleRenderMovies = () => {
+    if (!movies) {
+      return (
+        <div className="empty">
+          <h2>No movies found</h2>
+        </div>
+      );
+    }
+    return (
+      <div className="container">
+        {movies?.map((movie, index) => (
+          <MovieCard key={index + 1} movie={movie} />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="app">
       <h1 className="title">KenMovies</h1>
@@ -43,17 +62,7 @@ const MoviePage = () => {
         />
       </div>
 
-      {movies?.length > 0 ? (
-        <div className="container">
-          {movies.map((movie) => (
-            <MovieCard movie={movie} />
-          ))}
-        </div>
-      ) : (
-        <div className="empty">
-          <h2>No movies found</h2>
-        </div>
-      )}
+      {handleRenderMovies()}
     </div>
   );
 };
